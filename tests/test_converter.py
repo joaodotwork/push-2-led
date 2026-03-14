@@ -1,5 +1,6 @@
 """Tests for the frame converter module."""
 
+import cv2
 import numpy as np
 import pytest
 
@@ -104,6 +105,18 @@ class TestBgraToBgr565:
             bgra_to_bgr565(frame)
 
 
+class TestResizeInterpolation:
+    def test_nearest_interpolation(self):
+        frame = np.zeros((480, 1920, 4), dtype=np.uint8)
+        result = resize_frame(frame, interpolation=cv2.INTER_NEAREST)
+        assert result.shape == (DISPLAY_HEIGHT, DISPLAY_WIDTH, 4)
+
+    def test_linear_interpolation(self):
+        frame = np.zeros((480, 1920, 4), dtype=np.uint8)
+        result = resize_frame(frame, interpolation=cv2.INTER_LINEAR)
+        assert result.shape == (DISPLAY_HEIGHT, DISPLAY_WIDTH, 4)
+
+
 class TestConvertFrame:
     def test_bgr565_path(self):
         frame = np.zeros((480, 1920, 4), dtype=np.uint8)
@@ -116,3 +129,10 @@ class TestConvertFrame:
         result = convert_frame(frame, use_bgr565=False)
         assert result.shape == (DISPLAY_HEIGHT, DISPLAY_WIDTH, 3)
         assert result.dtype == np.float32
+
+    def test_interpolation_passthrough(self):
+        frame = np.zeros((480, 1920, 4), dtype=np.uint8)
+        # Should not raise — just verify it accepts the parameter.
+        result = convert_frame(frame, use_bgr565=True, interpolation=cv2.INTER_NEAREST)
+        assert result.shape == (DISPLAY_HEIGHT, DISPLAY_WIDTH)
+        assert result.dtype == np.uint16

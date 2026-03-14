@@ -56,6 +56,14 @@ class Push2Display:
             self._cleanup_push2()
             logger.info("Disconnected from Push 2")
 
+    def reconnect(self) -> bool:
+        """Disconnect and reconnect to the Push 2 display.
+
+        Returns True if reconnection succeeded.
+        """
+        self.disconnect()
+        return self.connect()
+
     def send_frame(self, frame: np.ndarray, fmt: str = FRAME_FORMAT_BGR565):
         """Send a frame to the Push 2 display.
 
@@ -94,6 +102,10 @@ class Push2Display:
             try:
                 self._push2.stop_active_sensing_thread()
             except Exception:
-                logger.exception("Error during cleanup")
-            finally:
-                self._push2 = None
+                logger.debug("Error stopping active sensing thread", exc_info=True)
+            try:
+                if hasattr(self._push2, "midi_out") and self._push2.midi_out is not None:
+                    self._push2.midi_out.close()
+            except Exception:
+                logger.debug("Error closing MIDI output", exc_info=True)
+            self._push2 = None

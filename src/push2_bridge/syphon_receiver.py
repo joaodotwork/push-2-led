@@ -84,7 +84,11 @@ class SyphonReceiver:
         if texture is None:
             return None
 
-        return copy_mtl_texture_to_image(texture)
+        try:
+            return copy_mtl_texture_to_image(texture)
+        except Exception:
+            logger.warning("Failed to copy texture to image", exc_info=True)
+            return None
 
     def _try_connect(self) -> bool:
         """Find a matching server and connect to it."""
