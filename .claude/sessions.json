@@ -1,0 +1,53 @@
+{
+  "active": [],
+  "closed": [
+    {
+      "id": "sprint1",
+      "focus": "Sprint 1: Foundation — dev env, display driver, frame converter",
+      "branch": "feat/sprint1-foundation",
+      "worktree": "/Users/joao/Dev/push-2-led-session-sprint1",
+      "areas": [
+        "src/push2_bridge/**"
+      ],
+      "createdAt": "2026-03-14T10:49:46+0100",
+      "issues": [
+        "1"
+      ],
+      "endedAt": "2026-03-14T11:28:39+0100"
+    },
+    {
+      "id": "sprint2",
+      "focus": "Sprint 2: Pipeline — Syphon receiver, bridge loop, keep-alive",
+      "branch": "feat/sprint2-pipeline",
+      "worktree": "/Users/joao/Dev/push-2-led-session-sprint2",
+      "areas": [
+        "src/push2_bridge/**"
+      ],
+      "createdAt": "2026-03-14T11:33:03+0100",
+      "issues": [
+        "4",
+        "5",
+        "6"
+      ],
+      "endedAt": "2026-03-14T15:28:42+0100"
+    },
+    {
+      "id": "sprint3",
+      "focus": "Sprint 3: Optimization & Polish — 30+ fps, error handling, CLI",
+      "branch": "feat/sprint3-optimization",
+      "worktree": "/Users/joao/Dev/push-2-led-session-sprint3",
+      "areas": [
+        "src/push2_bridge/**"
+      ],
+      "createdAt": "2026-03-14T15:30:24+0100",
+      "issues": [
+        "7",
+        "8",
+        "9"
+      ],
+      "endedAt": "2026-03-14T16:07:14+0100"
+    }
+  ],
+  "schema_version": "2.0",
+  "last_updated": "2026-03-14T16:07:14+0100"
+}
