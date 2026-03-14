@@ -15,6 +15,13 @@ Pipeline: VDMX publishes a Syphon server → `syphon-python` receives GPU-shared
 - Display blacks out after 2s without a frame — must send keep-alive frames
 - Target: 30+ fps. BGR565 native path gets ~36 fps; RGB float path is slower (~14 fps)
 
+## VDMX Setup
+
+Create a dedicated Syphon output in VDMX named **"Push2"** at **960×160**.
+The bridge looks for a server named "Push2" by default. Setting the layer to
+the exact display resolution avoids resize overhead and gives you pixel-perfect
+control over cropping/composition in VDMX.
+
 ## Modules
 
 - `src/push2_bridge/syphon_receiver.py` — Syphon client, discovers VDMX server
