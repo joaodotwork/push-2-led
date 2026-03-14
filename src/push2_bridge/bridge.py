@@ -6,6 +6,7 @@ import time
 from collections import deque
 from typing import Optional
 
+import cv2
 import numpy as np
 from push2_python.constants import FRAME_FORMAT_BGR565
 
@@ -16,6 +17,7 @@ from push2_bridge.syphon_receiver import SyphonReceiver
 logger = logging.getLogger(__name__)
 
 DEFAULT_FPS = 30
+RECONNECT_COOLDOWN = 2.0
 
 
 class Bridge:
@@ -27,10 +29,12 @@ class Bridge:
         syphon_app_name: Optional[str] = None,
         syphon_server_name: Optional[str] = None,
         fallback_color: tuple[int, int, int] = (0, 0, 0),
+        interpolation: int = cv2.INTER_LINEAR,
     ):
         self._target_fps = target_fps
         self._frame_interval = 1.0 / target_fps
         self._fallback_color = fallback_color
+        self._interpolation = interpolation
 
         self._receiver = SyphonReceiver(
             app_name=syphon_app_name, server_name=syphon_server_name
@@ -40,6 +44,8 @@ class Bridge:
         self._running = False
         self._last_frame: Optional[np.ndarray] = None
         self._fps_window: deque[float] = deque(maxlen=60)
+        self._last_reconnect_attempt: float = -RECONNECT_COOLDOWN
+        self._syphon_was_connected: bool = False
 
     @property
     def fps(self) -> float:
@@ -53,15 +59,16 @@ class Bridge:
 
     def run(self):
         """Start the bridge loop. Blocks until stop() is called or Ctrl+C."""
-        # Install signal handler for clean shutdown.
-        prev_handler = signal.signal(signal.SIGINT, self._signal_handler)
+        prev_sigint = signal.signal(signal.SIGINT, self._signal_handler)
+        prev_sigterm = signal.signal(signal.SIGTERM, self._signal_handler)
 
         try:
             self._startup()
             self._loop()
         finally:
             self._shutdown()
-            signal.signal(signal.SIGINT, prev_handler)
+            signal.signal(signal.SIGINT, prev_sigint)
+            signal.signal(signal.SIGTERM, prev_sigterm)
 
     def stop(self):
         """Signal the bridge loop to stop."""
@@ -102,9 +109,21 @@ class Bridge:
         """Process one frame: receive → convert → send."""
         raw_frame = self._receiver.get_frame()
 
+        # Track Syphon connection transitions.
+        syphon_connected = self._receiver.is_connected
+        if self._syphon_was_connected and not syphon_connected:
+            logger.warning("Syphon server disconnected")
+        elif not self._syphon_was_connected and syphon_connected:
+            desc = self._receiver.server_description
+            if desc:
+                logger.info("Syphon server connected: %s (%s)", desc.name, desc.app_name)
+        self._syphon_was_connected = syphon_connected
+
         if raw_frame is not None:
             # Live frame from Syphon.
-            converted = convert_frame(raw_frame, use_bgr565=True)
+            converted = convert_frame(
+                raw_frame, use_bgr565=True, interpolation=self._interpolation
+            )
             self._last_frame = converted
         elif self._last_frame is not None:
             # Keep-alive: resend the last good frame.
@@ -117,7 +136,8 @@ class Bridge:
         try:
             self._display.send_frame(converted, fmt=FRAME_FORMAT_BGR565)
         except Exception:
-            logger.exception("Failed to send frame to Push 2")
+            logger.error("Failed to send frame to Push 2 — attempting reconnect")
+            self._attempt_usb_reconnect()
 
     def _make_fallback_frame(self) -> np.ndarray:
         """Create a solid-color BGR565 fallback frame."""
@@ -128,6 +148,17 @@ class Bridge:
         pixel = (np.uint16(b16) << 11) | (np.uint16(g16) << 5) | r16
         return np.full((160, 960), pixel, dtype=np.uint16)
 
+    def _attempt_usb_reconnect(self):
+        """Try to reconnect to Push 2, respecting a cooldown period."""
+        now = time.monotonic()
+        if now - self._last_reconnect_attempt < RECONNECT_COOLDOWN:
+            return
+        self._last_reconnect_attempt = now
+        if self._display.reconnect():
+            logger.info("Reconnected to Push 2 display")
+        else:
+            logger.warning("Push 2 reconnect failed — will retry in %.0fs", RECONNECT_COOLDOWN)
+
     def _signal_handler(self, signum, frame):
         logger.info("Received signal %d — shutting down", signum)
         self._running = False
@@ -135,6 +166,12 @@ class Bridge:
     def _shutdown(self):
         """Disconnect everything cleanly."""
         logger.info("Shutting down bridge (last fps: %.1f)...", self.fps)
-        self._receiver.stop()
-        self._display.disconnect()
+        try:
+            self._receiver.stop()
+        except Exception:
+            logger.warning("Error stopping Syphon receiver", exc_info=True)
+        try:
+            self._display.disconnect()
+        except Exception:
+            logger.warning("Error disconnecting Push 2", exc_info=True)
         logger.info("Bridge stopped")

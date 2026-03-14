@@ -7,20 +7,26 @@ DISPLAY_WIDTH = 960
 DISPLAY_HEIGHT = 160
 
 
-def resize_frame(frame: np.ndarray, width: int = DISPLAY_WIDTH, height: int = DISPLAY_HEIGHT) -> np.ndarray:
+def resize_frame(
+    frame: np.ndarray,
+    width: int = DISPLAY_WIDTH,
+    height: int = DISPLAY_HEIGHT,
+    interpolation: int = cv2.INTER_LINEAR,
+) -> np.ndarray:
     """Resize a frame to the target dimensions.
 
     Args:
         frame: input image as numpy array (any shape accepted by cv2.resize)
         width: target width (default 960)
         height: target height (default 160)
+        interpolation: OpenCV interpolation flag (default INTER_LINEAR)
 
     Returns:
         Resized numpy array with same dtype and channel count.
     """
     if frame.shape[1] == width and frame.shape[0] == height:
         return frame
-    return cv2.resize(frame, (width, height), interpolation=cv2.INTER_LINEAR)
+    return cv2.resize(frame, (width, height), interpolation=interpolation)
 
 
 def bgra_to_rgb_float(frame: np.ndarray) -> np.ndarray:
@@ -55,12 +61,17 @@ def bgra_to_bgr565(frame: np.ndarray) -> np.ndarray:
     return (b << 11) | (g << 5) | r
 
 
-def convert_frame(frame: np.ndarray, use_bgr565: bool = True) -> np.ndarray:
+def convert_frame(
+    frame: np.ndarray,
+    use_bgr565: bool = True,
+    interpolation: int = cv2.INTER_LINEAR,
+) -> np.ndarray:
     """Resize and convert a BGRA frame for the Push 2 display.
 
     Args:
         frame: (H, W, 4) uint8 BGRA image (e.g. from Syphon)
         use_bgr565: if True, output BGR565 uint16; otherwise RGB float32
+        interpolation: OpenCV interpolation flag (default INTER_LINEAR)
 
     Returns:
         Resized and converted frame ready for Push2Display.send_frame()
@@ -69,7 +80,7 @@ def convert_frame(frame: np.ndarray, use_bgr565: bool = True) -> np.ndarray:
     # The display wrapper transposes for push2-python's (W,H) layout,
     # which also mirrors X, so only a vertical flip is needed here.
     frame = frame[::-1]
-    resized = resize_frame(frame)
+    resized = resize_frame(frame, interpolation=interpolation)
     if use_bgr565:
         return bgra_to_bgr565(resized)
     return bgra_to_rgb_float(resized)
