@@ -65,6 +65,10 @@ def convert_frame(frame: np.ndarray, use_bgr565: bool = True) -> np.ndarray:
     Returns:
         Resized and converted frame ready for Push2Display.send_frame()
     """
+    # Metal textures have origin at bottom-left — flip vertically.
+    # The display wrapper transposes for push2-python's (W,H) layout,
+    # which also mirrors X, so only a vertical flip is needed here.
+    frame = frame[::-1]
     resized = resize_frame(frame)
     if use_bgr565:
         return bgra_to_bgr565(resized)

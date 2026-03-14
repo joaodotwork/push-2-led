@@ -10,6 +10,8 @@ from syphon.utils.numpy import copy_mtl_texture_to_image
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_SERVER_NAME = "Push2"
+
 
 class SyphonReceiver:
     """Discovers a Syphon server and receives BGRA frames from it."""
@@ -18,10 +20,12 @@ class SyphonReceiver:
         """Create a receiver that will look for a specific Syphon server.
 
         Args:
-            app_name: match server by application name (e.g. "VDMX5").
-                      If None, connects to the first available server.
+            app_name: match server by application name (e.g. "VDMX6").
             server_name: match server by its published name.
+                         Defaults to "Push2" if neither filter is specified.
         """
+        if app_name is None and server_name is None:
+            server_name = DEFAULT_SERVER_NAME
         self._app_name = app_name
         self._server_name = server_name
         self._directory: Optional[SyphonServerDirectory] = None
