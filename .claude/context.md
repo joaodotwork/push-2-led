@@ -38,11 +38,11 @@ Deployment: development
 3. Deploy to staging
 
 ## Recent Activity
+- **2026-03-14**: 2a5602e - Fix Mermaid line breaks in pipeline diagram
 - **2026-03-14**: 5efc87f - Add plantas/seiva coordination files for parallel session management
 - **2026-03-14**: 51c56ac - Add README with architecture diagrams, CLI docs, and Ko-fi link
 - **2026-03-14**: 1ae095a - Implement CLI, error handling, and optimization (Sprint 3)
 - **2026-03-14**: f5bd5eb - Fix frame orientation and default to "Push2" Syphon server
-- **2026-03-14**: 773fff5 - Implement Syphon→Push 2 pipeline with keep-alive (Sprint 2)
 
 ## Cost-Effective Context Strategy
 **For AI assistants:**

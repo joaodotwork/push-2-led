@@ -35,9 +35,9 @@ graph LR
 
 ```mermaid
 graph LR
-    A["Syphon GPU-to-CPU\n~1-3 ms"] --> B["Resize to 960x160\n~0.5 ms"]
-    B --> C["BGR565 conversion\n~0.2 ms"]
-    C --> D["USB bulk transfer\n~2-5 ms"]
+    A["Syphon GPU-to-CPU<br/>~1-3 ms"] --> B["Resize to 960x160<br/>~0.5 ms"]
+    B --> C["BGR565 conversion<br/>~0.2 ms"]
+    C --> D["USB bulk transfer<br/>~2-5 ms"]
 
     style A fill:#0ea5e9,stroke:#0284c7,color:#fff
     style B fill:#8b5cf6,stroke:#7c3aed,color:#fff
